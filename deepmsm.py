@@ -43,7 +43,7 @@ def symeig_reg(mat, epsilon: float = 1e-6, mode='regularize', eigenvectors=True)
         mat = mat + epsilon * identity
 
     # Calculate eigvalues and potentially eigvectors
-    eigval, eigvec = torch.symeig(mat, eigenvectors=True)
+    eigval, eigvec = torch.linalg.eigh(mat)
 
     if eigenvectors:
         eigvec = eigvec.transpose(0, 1)
@@ -564,7 +564,7 @@ def vampe_loss_rev(chi_t, chi_tau, ulayer, slayer, return_mu=False, return_Sigma
     Returns
     ---------
     vampe : torch.Tensor of shape [1,1] 
-            VAMP-E score.
+            VAMP-E loss.
     K : torch.Tensor of shape [n,n]. Only if return_K=True.
             Transition matrix.
     S : torch.Tensor of shape [n,n]. Only if return_S=True.
@@ -1315,7 +1315,8 @@ class DeepMSM(DLEstimatorMixin, Transformer):
             for g in self.optimizer_s.param_groups:
                 g['lr'] = lr_s/10
             for batch_0, batch_t in data_loader:
-                self.partial_fit((batch_0, batch_t), mask=mask,
+                with disable_TF32():
+                    self.partial_fit((batch_0, batch_t), mask=mask,
                                  train_score_callback=train_score_callback, tb_writer=tb_writer)
             
             
